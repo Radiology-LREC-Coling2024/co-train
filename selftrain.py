@@ -330,62 +330,24 @@ class SelfTrain:
         df = df_inf
         print("Shape of merged inf and trn is", df.shape)
         
-         # min_size = 10000
-        # for i in range(self.num_classes):
-        #     nrows = df[df[self.target] == i].shape[0]
-        #     if nrows < min_size:
-        #         min_size = nrows
+        min_size = 10000
+        for i in range(self.num_classes):
+            nrows = df[df[self.target] == i].shape[0]
+            if nrows < min_size:
+                min_size = nrows
         
-        # sample_size = math.ceil(min_size*coverage)
-        # conf_df = pd.DataFrame(columns=list(df.columns.values))
-        # print("Column Names:",list(df.columns.values))
-        # for i in range(self.num_classes):
-        #     df = df[df[self.target] == i].sort_values(by=["probability_inf"], ascending=False)
-        #     print("Predicted", str(i), "size:",df.shape[0])
-        #     subset_df = df.iloc[:sample_size,:]
-        #     conf_df = pd.concat([conf_df, subset_df])
+        sample_size = math.ceil(min_size*coverage)
+        conf_df = pd.DataFrame(columns=list(df.columns.values))
+        print("Column Names:",list(df.columns.values))
+        for i in range(self.num_classes):
+            df_sort = df[df[self.target] == i].sort_values(by=["probability_inf"], ascending=False)
+            print("Predicted", str(i), "size:",df_sort.shape[0])
+            subset_df = df_sort.iloc[:sample_size,:]
+            conf_df = pd.concat([conf_df, subset_df])
         
         
-        # return conf_df[["File Name", other_section, self.target]]
+        return conf_df[["File Name", other_section, self.target]]
 
-
-        if self.num_classes == 2:
-            event_df = df[df[self.target] == 1].sort_values(by=["probability_inf"], ascending=False)
-            nevent_df = df[df[self.target] == 0].sort_values(by=["probability_inf"], ascending=False)
-
-            print("Predicted events size:", event_df.shape[0])
-            print("Predicted non-event size:", nevent_df.shape[0])
-
-            sample_size = math.ceil(min(event_df.shape[0], nevent_df.shape[0]) * coverage)
-            conf_event_df = event_df.iloc[:sample_size,:]
-            conf_nevent_df = nevent_df.iloc[:sample_size,:]
-
-            conf_df = pd.concat([conf_event_df, conf_nevent_df])
-            self.writer.add_scalar("Conf_data_len" + "-" + section, conf_df.shape[0], step)
-
-            # record down percentage of positive values
-            # event_fract = top_df[top_df[self.target] == 1].shape[0] / top_df.shape[0]
-            return conf_df[["File Name", other_section, self.target]]
-        else:
-            event_df = df[df[self.target] == 1].sort_values(by=["probability_inf"], ascending=False)
-            nevent_df = df[df[self.target] == 0].sort_values(by=["probability_inf"], ascending=False)
-            likely_df = df[df[self.target] == 2].sort_values(by=["probability_inf"], ascending=False)
-
-            print("Predicted events size:", event_df.shape[0])
-            print("Predicted non-event size:", nevent_df.shape[0])
-            print("Predicted likely size:", likely_df.shape[0])
-
-            sample_size = math.ceil(min(event_df.shape[0], nevent_df.shape[0], likely_df.shape[0]) * coverage)
-            conf_event_df = event_df.iloc[:sample_size,:]
-            conf_nevent_df = nevent_df.iloc[:sample_size,:]
-            conf_likely_df = likely_df.iloc[:sample_size,:]
-
-            conf_df = pd.concat([conf_event_df, conf_nevent_df, conf_likely_df])
-            self.writer.add_scalar("Conf_data_len" + "-" + section, conf_df.shape[0], step)
-
-            # record down percentage of positive values
-            # event_fract = top_df[top_df[self.target] == 1].shape[0] / top_df.shape[0]
-            return conf_df[["File Name", other_section, self.target]]
 
 
     def eval(self, model, dataloader, section, step, type_df, save=True):
